@@ -1,25 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../../src/lib/supabase';
 import { useAuth } from '../../../src/context/AuthContext';
 
 export default function ProfileScreen() {
-  const { session } = useAuth();
-  const router = useRouter();
+  const { session, signOut } = useAuth();
+  const [saindo, setSaindo] = useState(false);
 
   async function handleLogout() {
-    Alert.alert('Sair', 'Deseja realmente sair?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.auth.signOut();
-          router.replace('/(auth)/login');
-        },
-      },
-    ]);
+    if (saindo) return;
+    setSaindo(true);
+    try {
+      await signOut();
+    } catch (err: any) {
+      Alert.alert('Erro', err.message ?? 'Não foi possível sair.');
+      setSaindo(false);
+    }
   }
 
   return (
@@ -38,8 +33,8 @@ export default function ProfileScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Conta</Text>
-        <TouchableOpacity style={styles.row} onPress={handleLogout}>
-          <Text style={styles.rowLabel}>🚪  Sair</Text>
+        <TouchableOpacity style={styles.row} onPress={handleLogout} disabled={saindo}>
+          <Text style={styles.rowLabel}>{saindo ? '⏳  Saindo...' : '🚪  Sair'}</Text>
           <Text style={styles.rowArrow}>›</Text>
         </TouchableOpacity>
       </View>

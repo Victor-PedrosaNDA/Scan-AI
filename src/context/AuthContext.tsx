@@ -18,13 +18,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
+    async function initSession() {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+
+        if (!sessionData.session) {
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+
+        // Verifica se o usuário ainda existe no servidor
+        const { error: userError } = await supabase.auth.getUser();
+
+        if (userError) {
+          // Usuário não existe mais — limpa sessão local
+          await supabase.auth.signOut();
+          setSession(null);
+        } else {
+          setSession(sessionData.session);
+        }
+      } catch {
+        await supabase.auth.signOut();
+        setSession(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    initSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setSession(null);
+      } else {
+        setSession(s);
+      }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-    });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -39,8 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await supabase.auth.signOut();
+    setSession(null);
   }
 
   return (

@@ -8,19 +8,7 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 const storage =
   Platform.OS === 'web'
-    ? {
-        getItem: (key: string) => {
-          try { return Promise.resolve(localStorage.getItem(key)); } catch { return Promise.resolve(null); }
-        },
-        setItem: (key: string, value: string) => {
-          try { localStorage.setItem(key, value); } catch {}
-          return Promise.resolve();
-        },
-        removeItem: (key: string) => {
-          try { localStorage.removeItem(key); } catch {}
-          return Promise.resolve();
-        },
-      }
+    ? undefined
     : {
         getItem: (key: string) => SecureStore.getItemAsync(key),
         setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
