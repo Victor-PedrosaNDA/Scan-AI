@@ -11,9 +11,15 @@ export interface ScanResult {
 }
 
 export async function scanReceipt(base64Image: string, mimeType = 'image/jpeg'): Promise<ScanResult> {
+  console.log('[scanReceipt] URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+  console.log('[scanReceipt] Tamanho base64:', base64Image?.length);
+
   const { data, error } = await supabase.functions.invoke('scan-receipt', {
     body: { image: base64Image, mimeType },
   });
+
+  console.log('[scanReceipt] data:', data);
+  console.log('[scanReceipt] error:', JSON.stringify(error));
 
   if (error) throw error;
   if (!data) throw new Error('Resposta vazia do servidor');

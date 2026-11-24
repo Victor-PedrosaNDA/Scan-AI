@@ -49,7 +49,7 @@ export default function ScanScreen() {
       });
       setStep('review');
     } catch (err: any) {
-      Alert.alert('Erro', err.message ?? 'Não foi possível escanear o comprovante.');
+      Alert.alert('Erro', 'Não foi possível escanear o comprovante. Tente novamente.');
       setStep('pick');
     }
   }
